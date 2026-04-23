@@ -19,7 +19,15 @@ phases:
       - echo Pushing image
       - docker push 159827196218.dkr.ecr.us-east-1.amazonaws.com/newrepo:latest
 
-artifacts:
-  files:
-    - appspec.yml
-    - scripts/*
+      # SSH into EC2 and deploy
+      - echo Deploying to EC2
+      - echo "$SSH_KEY" > key.pem
+      - chmod 400 key.pem
+
+      - ssh -o StrictHostKeyChecking=no ec2-user@<EC2-PUBLIC-IP> "
+          docker stop myapp || true &&
+          docker rm myapp || true &&
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 159827196218.dkr.ecr.us-east-1.amazonaws.com &&
+          docker pull 159827196218.dkr.ecr.us-east-1.amazonaws.com/newrepo:latest &&
+          docker run -d -p 80:80 --name myapp 159827196218.dkr.ecr.us-east-1.amazonaws.com/newrepo:latest
+        "
