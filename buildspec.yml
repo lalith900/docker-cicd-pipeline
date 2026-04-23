@@ -1,33 +1,24 @@
 version: 0.2
 
+env:
+  variables:
+    AWS_REGION: us-east-1
+    IMAGE_REPO_NAME: newrepo
+    ECR_URI: 159827196218.dkr.ecr.us-east-1.amazonaws.com/newrepo
+
 phases:
   pre_build:
     commands:
-      - echo Logging into ECR
+      - echo Logging into Amazon ECR...
       - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 159827196218.dkr.ecr.us-east-1.amazonaws.com
 
   build:
     commands:
-      - echo Building Docker image
+      - echo Building Docker image...
       - docker build -t newrepo .
-
-      - echo Tagging image
       - docker tag newrepo:latest 159827196218.dkr.ecr.us-east-1.amazonaws.com/newrepo:latest
 
   post_build:
     commands:
-      - echo Pushing image
+      - echo Pushing Docker image...
       - docker push 159827196218.dkr.ecr.us-east-1.amazonaws.com/newrepo:latest
-
-      # SSH into EC2 and deploy
-      - echo Deploying to EC2
-      - echo "$SSH_KEY" > new.pem
-      - chmod 400 new.pem
-
-      - ssh -i new.pem -o StrictHostKeyChecking=no ec2-user@98.87.155.231 "
-          docker stop myapp || true &&
-          docker rm myapp || true &&
-          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 159827196218.dkr.ecr.us-east-1.amazonaws.com &&
-          docker pull 159827196218.dkr.ecr.us-east-1.amazonaws.com/newrepo:latest &&
-          docker run -d -p 80:80 --name myapp 159827196218.dkr.ecr.us-east-1.amazonaws.com/newrepo:latest
-        "
