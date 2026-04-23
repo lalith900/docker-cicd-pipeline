@@ -1,0 +1,25 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging into ECR
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 159827196218.dkr.ecr.us-east-1.amazonaws.com
+
+  build:
+    commands:
+      - echo Building Docker image
+      - docker build -t newrepo .
+
+      - echo Tagging image
+      - docker tag newrepo:latest 159827196218.dkr.ecr.us-east-1.amazonaws.com/newrepo:latest
+
+  post_build:
+    commands:
+      - echo Pushing image
+      - docker push 159827196218.dkr.ecr.us-east-1.amazonaws.com/newrepo:latest
+
+artifacts:
+  files:
+    - appspec.yml
+    - scripts/*
