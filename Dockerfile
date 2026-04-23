@@ -1,1 +1,1 @@
-FROM nginx:latest
+FROM public.ecr.aws/nginx/nginx:latest
